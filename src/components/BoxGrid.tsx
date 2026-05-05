@@ -17,8 +17,18 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   
   useFrame(() => {
     if (!meshRef.current) return
-    const targetZ = hovered ? 0.8 : 0
-    meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, targetZ, 0.1)
+    
+    // 1. 显著增加升起高度
+    const targetZ = hovered ? 2.0 : 0
+    
+    // 2. 实现非对称插值：升起快，下沉慢
+    const lerpSpeed = hovered ? 0.15 : 0.04
+    
+    meshRef.current.position.z = THREE.MathUtils.lerp(
+      meshRef.current.position.z, 
+      targetZ, 
+      lerpSpeed
+    )
   })
 
   return (

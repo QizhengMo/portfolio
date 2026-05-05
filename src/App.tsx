@@ -47,10 +47,10 @@ export default function App() {
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
       {/* 1. Logo - 左上角 (通过 MarginSync 实时同步) */}
       <div
-        className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
+        className="absolute top-20 z-[1000] flex flex-col items-start gap-2 pointer-events-none"
         style={{ left: `${gridMargin}px` }}
       >
-        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
+        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase pointer-events-auto">
           Nathan Mo
         </div>
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
@@ -75,13 +75,13 @@ export default function App() {
         </Canvas>
       </div>
 
-      {/* 3. 内容层 (文字) */}
+      {/* 3. 内容层 (文字) - 开启事件穿透 */}
       <div
-        className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
+        className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory pointer-events-none"
         onScroll={handleScroll}
       >
         {sectionList.map(({ name, Component }, i) => (
-          <div key={name} id={`section-${i}`}>
+          <div key={name} id={`section-${i}`} className="pointer-events-none">
             <Component />
           </div>
         ))}
@@ -89,10 +89,10 @@ export default function App() {
 
       {/* 4. 导航菜单 (动态对齐) */}
       <div
-        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
+        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right pointer-events-none"
         style={{ right: `${gridMargin}px` }}
       >
-        <nav className="flex flex-col items-end gap-4">
+        <nav className="flex flex-col items-end gap-4 pointer-events-auto">
           {sectionList.map((section, i) => (
             <button
               key={section.name}
