@@ -1,11 +1,5 @@
-import React, { useState, Suspense, useRef } from 'react'
-import { Canvas } from '@react-three/fiber'
+import React, { useState, useRef } from 'react'
 import * as THREE from 'three'
-import { PerspectiveCamera } from "@react-three/drei"
-
-// 引入主题和配置
-import { KAMI_THEME } from './theme'
-import { CAMERA_CONFIG, SHOW_DEBUG } from './config'
 
 // 引入章节组件
 import Work from './sections/Work'
@@ -13,22 +7,19 @@ import About from './sections/About'
 import Contact from './sections/Contact'
 
 // 引入拆分后的 3D 组件
-import { BoxGrid } from './components/BoxGrid'
-import { CameraRig, MarginSync } from './components/SceneLogic'
+import { Experience } from './components/Experience'
 
 // --- 主应用 ---
 
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
   const [gridMargin, setGridMargin] = useState(48)
-  const containerRef = useRef<HTMLDivElement>(null)
-
+  
   const sectionList = [
     { name: 'About', Component: About },
     { name: 'Work', Component: Work },
     { name: 'Contact', Component: Contact }
   ]
-  const { ortho } = CAMERA_CONFIG
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop
@@ -43,12 +34,9 @@ export default function App() {
   const gridGroupRef = useRef<THREE.Group>(null)
 
   return (
-    <div
-      ref={containerRef}
-      className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden"
-    >
+    <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
       {/* 1. Logo - 左上角 */}
-      <div
+      <div 
         className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
         style={{ left: `${gridMargin}px` }}
       >
@@ -58,28 +46,17 @@ export default function App() {
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
       </div>
 
-      {/* 2. 3D 背景层 - 监听全局 window 事件以实现完全穿透 */}
+      {/* 2. 3D 背景层 - 已提取至 Experience 组件 */}
       <div className="absolute inset-0 z-0">
-        <Canvas
-          dpr={[1, 2]}
-          eventSource={window as any}
-          eventPrefix="client"
-          gl={{ antialias: true, logarithmicDepthBuffer: true }}
-          className="bg-[var(--kami-parchment)]"
-        >
-          <Suspense fallback={null}>
-            <PerspectiveCamera makeDefault position={ortho.pos} fov={ortho.fov} />
-            <ambientLight intensity={10} color={KAMI_THEME.colors.parchment} />
-            <pointLight position={[20, 20, 20]} intensity={10} color={KAMI_THEME.colors.parchment} />
-            <CameraRig isFreeCamera={isFreeCamera} />
-            <BoxGrid showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
-            <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
-          </Suspense>
-        </Canvas>
+        <Experience 
+          isFreeCamera={isFreeCamera}
+          setGridMargin={setGridMargin}
+          gridGroupRef={gridGroupRef}
+        />
       </div>
 
-      {/* 3. 内容层 (文字) - 恢复正常交互，不再需要 pointer-events-none */}
-      <div
+      {/* 3. 内容层 (文字) */}
+      <div 
         className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
         onScroll={handleScroll}
       >
@@ -90,8 +67,8 @@ export default function App() {
         ))}
       </div>
 
-      {/* 4. 导航菜单 */}
-      <div
+      {/* 4. 导航菜单 (动态对齐) */}
+      <div 
         className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
         style={{ right: `${gridMargin}px` }}
       >
