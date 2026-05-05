@@ -7,6 +7,7 @@ import { KAMI_THEME } from '../theme'
 import { CAMERA_CONFIG, SHOW_DEBUG } from '../config'
 import { GridBackground } from './GridBackground'
 import { CameraRig, MarginSync } from './SceneLogic'
+import { FallingCubes } from './FallingCubes'
 
 interface ExperienceProps {
   activeSection: number
@@ -32,7 +33,8 @@ export function Experience({ activeSection, setGridMargin, gridGroupRef }: Exper
         <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
         <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
         <CameraRig activeSection={activeSection} />
-        <GridBackground showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
+        <GridBackground activeSection={activeSection} showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
+        <FallingCubes activeSection={activeSection} />
         <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
       </Suspense>
     </Canvas>

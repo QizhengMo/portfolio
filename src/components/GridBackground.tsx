@@ -5,12 +5,13 @@ import { Edges, Text } from "@react-three/drei"
 import { KAMI_THEME } from '../theme'
 import { GRID_CONFIG } from '../config'
 
-const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
+const GridBox = React.memo(({ position, size, gridX, gridY, showDebug, activeSection }: {
   position: [number, number, number],
   size: number,
   gridX: number,
   gridY: number,
-  showDebug: boolean
+  showDebug: boolean,
+  activeSection: number
 }) => {
   const [hovered, setHover] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
@@ -18,10 +19,10 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   useFrame(() => {
     if (!meshRef.current) return
 
-    // 1. 显著增加升起高度
-    const targetZ = hovered ? 2.0 : 0
+    // 只有在非第三页时才开启浮雕效果
+    const canRelief = activeSection !== 2
+    const targetZ = (hovered && canRelief) ? 2.0 : 0
 
-    // 2. 实现非对称插值：升起快，下沉慢
     const lerpSpeed = hovered ? 0.15 : 0.04
 
     meshRef.current.position.z = THREE.MathUtils.lerp(
@@ -39,24 +40,24 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
       onPointerOut={() => setHover(false)}
     >
       <boxGeometry args={[size, size, size]} />
-      <meshBasicMaterial 
-        color={KAMI_THEME.colors.parchment} 
+      <meshBasicMaterial
+        color={KAMI_THEME.colors.parchment}
         transparent={true}
         opacity={1}
       />
       <Edges
         threshold={15}
-        color={hovered ? "#c5a059" : "#e8e4d8"} // 悬浮时切换为精致的金色
+        color={hovered && activeSection !== 2 ? "#c5a059" : "#e8e4d8"}
         renderOrder={100}
         scale={1.002}
       >
-        <lineBasicMaterial 
-          transparent={true} 
-          opacity={hovered ? 0.8 : 0.3} // 非悬浮时大幅降低透明度
-          polygonOffset 
-          polygonOffsetFactor={-1} 
-          polygonOffsetUnits={-4} 
-          depthTest={true} 
+        <lineBasicMaterial
+          transparent={true}
+          opacity={hovered && activeSection !== 2 ? 0.8 : 0.3}
+          polygonOffset
+          polygonOffsetFactor={-1}
+          polygonOffsetUnits={-4}
+          depthTest={true}
         />
       </Edges>
       {showDebug && (
@@ -74,7 +75,15 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   )
 })
 
-export function GridBackground({ showDebug, groupRef }: { showDebug: boolean, groupRef: React.RefObject<THREE.Group> }) {
+export function GridBackground({
+  activeSection,
+  showDebug,
+  groupRef
+}: {
+  activeSection: number,
+  showDebug: boolean,
+  groupRef: React.RefObject<THREE.Group>
+}) {
   const { size } = useThree()
   const { step, size: boxSize, zoomReference, excluded } = GRID_CONFIG
 
@@ -111,6 +120,7 @@ export function GridBackground({ showDebug, groupRef }: { showDebug: boolean, gr
           gridX={box.gridX}
           gridY={box.gridY}
           showDebug={showDebug}
+          activeSection={activeSection}
         />
       ))}
     </group>
