@@ -40,15 +40,16 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
 })
 
 function BoxGrid({ showDebug }: { showDebug: boolean }) {
-  const { viewport } = useThree()
+  const { size } = useThree()
 
   // 设置方块大小和间隙
   const boxSize = 5;
   const step = 5;
 
-  // 根据 viewport（视口世界单位）计算行列, 请勿修改
-  const columns = Math.floor(viewport.width / step)
-  const rows = Math.floor(viewport.height / step)
+  // 使用画布像素尺寸 (size) 配合固定缩放系数 (30) 计算行列
+  // 这样无论相机如何切换或位移，网格的生成逻辑都是稳定的
+  const columns = Math.floor(size.width / (30 * step))
+  const rows = Math.floor(size.height / (30 * step))
 
   const boxes = useMemo(() => {
     const temp = []
@@ -59,7 +60,7 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
     // 配置需要去掉的方块索引
     // 这里使用函数判断，可以支持绝对坐标或相对坐标（如四个角）
     const checkExcluded = (x: number, y: number, cols: number, rs: number) => {
-      const excluded = [[0, rs - 1], [1, rs - 1]]
+      const excluded = [[0, rs - 1], [1, rs - 1], [cols - 1, 0], [cols - 2, 0]]
       return excluded.some(([ex, ey]) => x === ex && y === ey)
     }
 
@@ -98,24 +99,34 @@ function CameraRig({ active }: { active: boolean }) {
   useFrame((state) => {
     if (!active) return
 
-    // 基础参数
-    const basePos = new THREE.Vector3(0.25, -44.52, 26.80)
-    const baseRot = new THREE.Euler(1.03, 0.00, -0.01)
+    // 最终目标参数
+    const basePos = new THREE.Vector3(0.25, -45, 30)
+    const baseRot = new THREE.Euler(1, 0, 0)
+    const targetFov = 40
 
-    // 根据鼠标位置计算目标位置偏移（微调 x 和 y）
-    // 鼠标在 viewport 中心时 state.mouse 为 (0,0)，边缘为 (-1, 1)
+    // 根据鼠标位置计算目标位置偏移
     const targetPos = new THREE.Vector3(
       basePos.x + state.mouse.x * 2,
       basePos.y + state.mouse.y * 2,
       basePos.z
     )
 
-    // 平滑插值
-    state.camera.position.lerp(targetPos, 0.05)
+    const step = 0.05 // 动画灵敏度
 
-    // 稍微改变一点旋转角度来增强倾斜感
-    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, baseRot.x - state.mouse.y * 0.05, 0.05)
-    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, baseRot.y + state.mouse.x * 0.05, 0.05)
+    // 平滑插值位置
+    state.camera.position.lerp(targetPos, step)
+
+    // 平滑插值旋转
+    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, baseRot.x - state.mouse.y * 0.05, step)
+    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, baseRot.y + state.mouse.x * 0.05, step)
+    state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, baseRot.z, step)
+
+    // 平滑插值 FOV
+    if ((state.camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+      const cam = state.camera as THREE.PerspectiveCamera
+      cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, step)
+      cam.updateProjectionMatrix()
+    }
   })
   return null
 }
@@ -140,9 +151,9 @@ export default function App() {
           {isFreeCamera ? (
             <PerspectiveCamera
               makeDefault
-              position={[0.25, -44.52, 26.80]}
-              rotation={[1.03, 0.00, -0.01]}
-              fov={50}
+              position={[0, 0, 30]} // 从正上方开始，距离拉近到 30
+              rotation={[0, 0, 0]}
+              fov={15}
             />
           ) : (
             <OrthographicCamera makeDefault position={[0, 0, 10]} zoom={30} />
