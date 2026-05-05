@@ -1,0 +1,39 @@
+import React, { Suspense } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { PerspectiveCamera } from "@react-three/drei"
+import * as THREE from 'three'
+
+import { KAMI_THEME } from '../theme'
+import { CAMERA_CONFIG, SHOW_DEBUG } from '../config'
+import { GridBackground } from './GridBackground'
+import { CameraRig, MarginSync } from './SceneLogic'
+
+interface ExperienceProps {
+  isFreeCamera: boolean
+  setGridMargin: (m: number) => void
+  gridGroupRef: React.RefObject<THREE.Group>
+}
+
+export function Experience({ isFreeCamera, setGridMargin, gridGroupRef }: ExperienceProps) {
+  const { ortho } = CAMERA_CONFIG
+
+  return (
+    <Canvas
+      dpr={[1, 2]}
+      eventSource={window as any}
+      eventPrefix="client"
+      gl={{ antialias: true, logarithmicDepthBuffer: true }}
+      className="bg-[var(--kami-parchment)]"
+    >
+      <Suspense fallback={null}>
+        <PerspectiveCamera makeDefault position={ortho.pos} fov={ortho.fov} />
+        <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
+        <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
+        <CameraRig isFreeCamera={isFreeCamera} />
+        <GridBackground showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
+        {/* 注入边距同步器 */}
+        <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
+      </Suspense>
+    </Canvas>
+  )
+}
