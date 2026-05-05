@@ -1,7 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Inter:wght@400;500;600&display=swap');
+
 @import "tailwindcss";
+
+:root {
+  --kami-brand: #1b365d;
+  --kami-parchment: #f5f4ed;
+  --kami-ivory: #faf9f5;
+  --kami-ink: #1c1c1c;
+  --kami-gray: #716b5a;
+}
 
 body {
   margin: 0;
   padding: 0;
-  background-color: #050505;
+  background-color: var(--kami-parchment);
+  color: var(--kami-ink);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, .serif {
+  font-family: 'Newsreader', serif;
+  font-weight: 500;
 }

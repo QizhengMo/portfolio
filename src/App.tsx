@@ -1,9 +1,13 @@
 import React, { useMemo, useState, Suspense } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { OrthographicCamera, Edges, PerspectiveCamera, OrbitControls, Text } from "@react-three/drei"
+import { OrthographicCamera, Edges, PerspectiveCamera, Text } from "@react-three/drei"
 
-const SHOW_DEBUG = false // 全局 Debug 标志
+// 引入主题和配置
+import { KAMI_THEME } from './theme'
+import { GRID_CONFIG, CAMERA_CONFIG, SHOW_DEBUG } from './config'
+
+// --- 子组件 ---
 
 const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   position: [number, number, number],
@@ -11,62 +15,47 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   gridX: number,
   gridY: number,
   showDebug: boolean
-}) => {
-  return (
-    <mesh position={position}>
-      <boxGeometry args={[size, size, size]} />
-      <meshStandardMaterial color="#2f74c0" />
-      <Edges
-        threshold={15}
-        color="white"
-        renderOrder={100}
-        scale={1.002}
+}) => (
+  <mesh position={position}>
+    <boxGeometry args={[size, size, size]} />
+    <meshStandardMaterial color={KAMI_THEME.colors.ivory} />
+    <Edges
+      threshold={15}
+      color={KAMI_THEME.colors.brand}
+      renderOrder={100}
+      scale={1.002}
+    >
+      <lineBasicMaterial polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-4} depthTest={true} />
+    </Edges>
+    {showDebug && (
+      <Text
+        position={[0, 0, size / 2 + 0.05]}
+        fontSize={size * 0.2}
+        color={KAMI_THEME.colors.brand}
+        anchorX="center"
+        anchorY="middle"
       >
-        <lineBasicMaterial polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-4} depthTest={true} />
-      </Edges>
-      {showDebug && (
-        <Text
-          position={[0, 0, size / 2 + 0.05]}
-          fontSize={size * 0.2}
-          color="white"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {`${gridX},${gridY}`}
-        </Text>
-      )}
-    </mesh>
-  )
-})
+        {`${gridX},${gridY}`}
+      </Text>
+    )}
+  </mesh>
+))
 
 function BoxGrid({ showDebug }: { showDebug: boolean }) {
   const { size } = useThree()
+  const { step, size: boxSize, zoomReference, excluded } = GRID_CONFIG
 
-  // 设置方块大小和间隙
-  const boxSize = 5;
-  const step = 5;
-
-  // 使用画布像素尺寸 (size) 配合固定缩放系数 (30) 计算行列
-  // 这样无论相机如何切换或位移，网格的生成逻辑都是稳定的
-  const columns = Math.floor(size.width / (30 * step))
-  const rows = Math.floor(size.height / (30 * step))
+  const columns = Math.floor(size.width / (zoomReference * step))
+  const rows = Math.floor(size.height / (zoomReference * step))
 
   const boxes = useMemo(() => {
     const temp = []
-    // 居中偏移计算
     const offsetX = (columns - 1) * step / 2
     const offsetY = (rows - 1) * step / 2
 
-    // 配置需要去掉的方块索引
-    // 这里使用函数判断，可以支持绝对坐标或相对坐标（如四个角）
-    const checkExcluded = (x: number, y: number, cols: number, rs: number) => {
-      const excluded = [[0, rs - 1], [1, rs - 1], [cols - 1, 0], [cols - 2, 0]]
-      return excluded.some(([ex, ey]) => x === ex && y === ey)
-    }
-
     for (let x = 0; x < columns; x++) {
       for (let y = 0; y < rows; y++) {
-        if (!checkExcluded(x, y, columns, rows)) {
+        if (!excluded(x, y, columns, rows)) {
           temp.push({
             id: `${x}-${y}`,
             gridX: x,
@@ -77,7 +66,7 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
       }
     }
     return temp
-  }, [columns, rows, step])
+  }, [columns, rows, step, excluded])
 
   return (
     <group>
@@ -96,71 +85,66 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
 }
 
 function CameraRig({ active }: { active: boolean }) {
+  const { persp, transitionStep } = CAMERA_CONFIG
+  
   useFrame((state) => {
     if (!active) return
 
-    // 最终目标参数
-    const basePos = new THREE.Vector3(0.25, -45, 30)
-    const baseRot = new THREE.Euler(1, 0, 0)
-    const targetFov = 40
-
-    // 根据鼠标位置计算目标位置偏移
     const targetPos = new THREE.Vector3(
-      basePos.x + state.mouse.x * 2,
-      basePos.y + state.mouse.y * 2,
-      basePos.z
+      persp.target.pos.x + state.mouse.x * 2,
+      persp.target.pos.y + state.mouse.y * 2,
+      persp.target.pos.z
     )
 
-    const step = 0.05 // 动画灵敏度
+    state.camera.position.lerp(targetPos, transitionStep)
 
-    // 平滑插值位置
-    state.camera.position.lerp(targetPos, step)
+    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, persp.target.rot.x - state.mouse.y * 0.05, transitionStep)
+    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, persp.target.rot.y + state.mouse.x * 0.05, transitionStep)
+    state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, persp.target.rot.z, transitionStep)
 
-    // 平滑插值旋转
-    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, baseRot.x - state.mouse.y * 0.05, step)
-    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, baseRot.y + state.mouse.x * 0.05, step)
-    state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, baseRot.z, step)
-
-    // 平滑插值 FOV
     if ((state.camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
       const cam = state.camera as THREE.PerspectiveCamera
-      cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, step)
+      cam.fov = THREE.MathUtils.lerp(cam.fov, persp.target.fov, transitionStep)
       cam.updateProjectionMatrix()
     }
   })
   return null
 }
 
+// --- 主应用 ---
+
 export default function App() {
   const [isFreeCamera, setIsFreeCamera] = useState(false)
+  const { ortho, persp } = CAMERA_CONFIG
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[#050505] overflow-hidden">
+    <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
       {/* UI Overlay */}
-      <div className="absolute top-5 right-5 z-[1000] flex gap-2.5">
+      <div className="absolute top-8 right-8 z-[1000] flex flex-col items-end gap-4">
         <button
           onClick={() => setIsFreeCamera(!isFreeCamera)}
-          className="px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-lg cursor-pointer text-sm font-medium transition-all duration-300 shadow-2xl hover:bg-white/20"
+          className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-sm cursor-pointer text-sm font-medium transition-all duration-500 shadow-sm hover:bg-[var(--kami-ivory)] hover:text-[var(--kami-brand)] serif tracking-wider"
         >
-          {isFreeCamera ? 'Perspective' : 'Orthographic'}
+          {isFreeCamera ? 'VIEW PERSPECTIVE' : 'VIEW ORTHOGRAPHIC'}
         </button>
+        <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-30" />
       </div>
 
-      <Canvas dpr={[1, 2]} gl={{ antialias: true }}>
+      <Canvas dpr={[1, 2]} gl={{ antialias: true }} className="bg-[var(--kami-parchment)]">
         <Suspense fallback={null}>
           {isFreeCamera ? (
             <PerspectiveCamera
               makeDefault
-              position={[0, 0, 30]} // 从正上方开始，距离拉近到 30
+              position={persp.initial.pos}
               rotation={[0, 0, 0]}
-              fov={15}
+              fov={persp.initial.fov}
             />
           ) : (
-            <OrthographicCamera makeDefault position={[0, 0, 10]} zoom={30} />
+            <OrthographicCamera makeDefault position={ortho.pos} zoom={ortho.zoom} />
           )}
 
-          <ambientLight intensity={0.8} />
-          <pointLight position={[20, 20, 20]} intensity={2} />
+          <ambientLight intensity={1.5} color={KAMI_THEME.colors.warmLight} />
+          <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
 
           <CameraRig active={isFreeCamera} />
           <BoxGrid showDebug={SHOW_DEBUG} />
