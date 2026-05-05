@@ -30,7 +30,6 @@ export default function App() {
     }
   }
 
-  const isFreeCamera = activeSection === 2
   const gridGroupRef = useRef<THREE.Group>(null)
 
   return (
@@ -49,7 +48,7 @@ export default function App() {
       {/* 2. 3D 背景层 - 已提取至 Experience 组件 */}
       <div className="absolute inset-0 z-0">
         <Experience 
-          isFreeCamera={isFreeCamera}
+          activeSection={activeSection}
           setGridMargin={setGridMargin}
           gridGroupRef={gridGroupRef}
         />

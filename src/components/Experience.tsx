@@ -9,14 +9,12 @@ import { GridBackground } from './GridBackground'
 import { CameraRig, MarginSync } from './SceneLogic'
 
 interface ExperienceProps {
-  isFreeCamera: boolean
+  activeSection: number
   setGridMargin: (m: number) => void
   gridGroupRef: React.RefObject<THREE.Group>
 }
 
-export function Experience({ isFreeCamera, setGridMargin, gridGroupRef }: ExperienceProps) {
-  const { ortho } = CAMERA_CONFIG
-
+export function Experience({ activeSection, setGridMargin, gridGroupRef }: ExperienceProps) {
   return (
     <Canvas
       dpr={[1, 2]}
@@ -25,17 +23,16 @@ export function Experience({ isFreeCamera, setGridMargin, gridGroupRef }: Experi
       gl={{ 
         antialias: true, 
         logarithmicDepthBuffer: true,
-        toneMapping: THREE.NoToneMapping // 禁用色调映射，确保色彩与 CSS 一致
+        toneMapping: THREE.NoToneMapping 
       }}
       className="bg-[var(--kami-parchment)]"
     >
       <Suspense fallback={null}>
-        <PerspectiveCamera makeDefault position={ortho.pos} fov={ortho.fov} />
+        <PerspectiveCamera makeDefault position={[0, 0, 70]} fov={25} />
         <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
         <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
-        <CameraRig isFreeCamera={isFreeCamera} />
+        <CameraRig activeSection={activeSection} />
         <GridBackground showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
-        {/* 注入边距同步器 */}
         <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
       </Suspense>
     </Canvas>
