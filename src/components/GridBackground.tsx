@@ -46,11 +46,18 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
       />
       <Edges
         threshold={15}
-        color={hovered ? KAMI_THEME.colors.brand : KAMI_THEME.colors.olive}
+        color={hovered ? "#c5a059" : "#e8e4d8"} // 悬浮时切换为精致的金色
         renderOrder={100}
         scale={1.002}
       >
-        <lineBasicMaterial polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-4} depthTest={true} />
+        <lineBasicMaterial 
+          transparent={true} 
+          opacity={hovered ? 0.8 : 0.3} // 非悬浮时大幅降低透明度
+          polygonOffset 
+          polygonOffsetFactor={-1} 
+          polygonOffsetUnits={-4} 
+          depthTest={true} 
+        />
       </Edges>
       {showDebug && (
         <Text
