@@ -7,6 +7,11 @@ import { Edges, PerspectiveCamera, Text } from "@react-three/drei"
 import { KAMI_THEME } from './theme'
 import { GRID_CONFIG, CAMERA_CONFIG, SHOW_DEBUG } from './config'
 
+// 引入章节组件
+import Work from './sections/Work'
+import About from './sections/About'
+import Contact from './sections/Contact'
+
 // --- 子组件 ---
 
 const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
@@ -19,7 +24,6 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   const [hovered, setHover] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
 
-  // 使用 useFrame 实现平滑的 Z 轴位移（浮雕效果）
   useFrame(() => {
     if (!meshRef.current) return
     const targetZ = hovered ? 0.8 : 0
@@ -34,7 +38,6 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
       onPointerOut={() => setHover(false)}
     >
       <boxGeometry args={[size, size, size]} />
-      {/* 表面颜色与背景一致，模拟纸张浮雕感 */}
       <meshStandardMaterial
         color={KAMI_THEME.colors.parchment}
         roughness={0.8}
@@ -110,10 +113,7 @@ function CameraRig({ isFreeCamera }: { isFreeCamera: boolean }) {
   const { ortho, persp, transitionStep } = CAMERA_CONFIG
 
   useFrame((state) => {
-    // 决定当前的目标
     const target = isFreeCamera ? persp.target : ortho
-
-    // 计算鼠标偏移 (模拟正交模式下禁用鼠标跟随)
     const mouseIntensity = isFreeCamera ? 1 : 0
     const targetPos = new THREE.Vector3(
       target.pos.x + state.mouse.x * 2 * mouseIntensity,
@@ -121,15 +121,11 @@ function CameraRig({ isFreeCamera }: { isFreeCamera: boolean }) {
       target.pos.z
     )
 
-    // 平滑插值位置
     state.camera.position.lerp(targetPos, transitionStep)
-
-    // 平滑插值旋转
     state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, target.rot.x - state.mouse.y * 0.05 * mouseIntensity, transitionStep)
     state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, target.rot.y + state.mouse.x * 0.05 * mouseIntensity, transitionStep)
     state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, target.rot.z, transitionStep)
 
-    // 平滑插值 FOV
     const cam = state.camera as THREE.PerspectiveCamera
     cam.fov = THREE.MathUtils.lerp(cam.fov, target.fov, transitionStep)
     cam.updateProjectionMatrix()
@@ -140,46 +136,81 @@ function CameraRig({ isFreeCamera }: { isFreeCamera: boolean }) {
 // --- 主应用 ---
 
 export default function App() {
-  const [isFreeCamera, setIsFreeCamera] = useState(false)
+  const [activeSection, setActiveSection] = useState(0)
+  const sectionList = [
+    { name: 'About', Component: About },
+    { name: 'Work', Component: Work },
+    { name: 'Contact', Component: Contact }
+  ]
   const { ortho } = CAMERA_CONFIG
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop
+    const height = e.currentTarget.clientHeight
+    const index = Math.round(scrollTop / height)
+    if (index !== activeSection) {
+      setActiveSection(index)
+    }
+  }
+
+  // 只有在最后一页 (Contact) 时开启 Perspective
+  const isFreeCamera = activeSection === 2
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* UI Overlay */}
-      <div className="absolute top-10 right-10 z-[1000] flex flex-col items-end gap-6">
-        <div className="flex flex-col items-end gap-1">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--kami-brand)] opacity-50">View Mode</span>
-          <button
-            onClick={() => setIsFreeCamera(!isFreeCamera)}
-            className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-[8px] cursor-pointer text-[13px] font-medium transition-all duration-500 shadow-[var(--kami-whisper)] hover:translate-y-[-1px] hover:shadow-md serif tracking-wider"
-            style={{ borderRadius: KAMI_THEME.shape.radius.button }}
-          >
-            {isFreeCamera ? 'PERSPECTIVE' : 'ORTHOGRAPHIC'}
-          </button>
-        </div>
-        <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-20" />
+      {/* 3D 背景 */}
+      <div className="absolute inset-0 z-0">
+        <Canvas
+          dpr={[1, 2]}
+          gl={{ antialias: true, logarithmicDepthBuffer: true }}
+          className="bg-[var(--kami-parchment)]"
+        >
+          <Suspense fallback={null}>
+            <PerspectiveCamera makeDefault position={ortho.pos} fov={ortho.fov} />
+            <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
+            <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
+            <CameraRig isFreeCamera={isFreeCamera} />
+            <BoxGrid showDebug={SHOW_DEBUG} />
+          </Suspense>
+        </Canvas>
       </div>
 
-      <Canvas
-        dpr={[1, 2]}
-        gl={{ antialias: true, logarithmicDepthBuffer: true }}
-        className="bg-[var(--kami-parchment)]"
+      {/* 内容层 */}
+      <div
+        className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
+        onScroll={handleScroll}
       >
-        <Suspense fallback={null}>
-          {/* 全局仅使用一个透视相机 */}
-          <PerspectiveCamera
-            makeDefault
-            position={ortho.pos}
-            fov={ortho.fov}
-          />
+        {sectionList.map(({ name, Component }, i) => (
+          <div key={name} id={`section-${i}`}>
+            <Component />
+          </div>
+        ))}
+      </div>
 
-          <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
-          <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
-
-          <CameraRig isFreeCamera={isFreeCamera} />
-          <BoxGrid showDebug={SHOW_DEBUG} />
-        </Suspense>
-      </Canvas>
+      {/* 导航菜单 */}
+      <div className="absolute bottom-12 right-12 z-[1000] flex flex-col items-end gap-8 text-right">
+        <nav className="flex flex-col items-end gap-4">
+          {sectionList.map((section, i) => (
+            <button
+              key={section.name}
+              onClick={() => {
+                document.getElementById(`section-${i}`)?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="group flex items-center gap-4 cursor-pointer"
+            >
+              <span className={`text-xs font-medium tracking-[0.2em] uppercase transition-all duration-500 ${activeSection === i ? 'text-[var(--kami-brand)]' : 'text-[var(--kami-brand)] opacity-30 group-hover:opacity-60'
+                }`}>
+                {section.name}
+              </span>
+              <div className={`h-[1px] bg-[var(--kami-brand)] transition-all duration-500 ${activeSection === i ? 'w-12' : 'w-4 opacity-30 group-hover:w-8'
+                }`} />
+            </button>
+          ))}
+        </nav>
+        <div className="serif text-3xl text-[var(--kami-brand)] opacity-20 italic">
+          0{activeSection + 1}
+        </div>
+      </div>
     </div>
   )
 }
