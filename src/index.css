@@ -8,6 +8,7 @@
   --kami-ivory: #faf9f5;
   --kami-ink: #1c1c1c;
   --kami-gray: #716b5a;
+  --kami-whisper: 0 4px 24px rgba(0, 0, 0, 0.05);
 }
 
 body {
@@ -16,6 +17,7 @@ body {
   background-color: var(--kami-parchment);
   color: var(--kami-ink);
   font-family: 'Inter', sans-serif;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
 }
 

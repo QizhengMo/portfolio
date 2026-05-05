@@ -86,7 +86,7 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
 
 function CameraRig({ active }: { active: boolean }) {
   const { persp, transitionStep } = CAMERA_CONFIG
-  
+
   useFrame((state) => {
     if (!active) return
 
@@ -120,14 +120,18 @@ export default function App() {
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
       {/* UI Overlay */}
-      <div className="absolute top-8 right-8 z-[1000] flex flex-col items-end gap-4">
-        <button
-          onClick={() => setIsFreeCamera(!isFreeCamera)}
-          className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-sm cursor-pointer text-sm font-medium transition-all duration-500 shadow-sm hover:bg-[var(--kami-ivory)] hover:text-[var(--kami-brand)] serif tracking-wider"
-        >
-          {isFreeCamera ? 'VIEW PERSPECTIVE' : 'VIEW ORTHOGRAPHIC'}
-        </button>
-        <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-30" />
+      <div className="absolute top-10 right-10 z-[1000] flex flex-col items-end gap-6">
+        <div className="flex flex-col items-end gap-1">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--kami-brand)] opacity-50">View Mode</span>
+          <button
+            onClick={() => setIsFreeCamera(!isFreeCamera)}
+            className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-[8px] cursor-pointer text-[13px] font-medium transition-all duration-300 shadow-[var(--kami-whisper)] hover:translate-y-[-1px] hover:shadow-md serif tracking-wider"
+            style={{ borderRadius: KAMI_THEME.shape.radius.button }}
+          >
+            {isFreeCamera ? 'PERSPECTIVE' : 'ORTHOGRAPHIC'}
+          </button>
+        </div>
+        <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-20" />
       </div>
 
       <Canvas dpr={[1, 2]} gl={{ antialias: true }} className="bg-[var(--kami-parchment)]">
