@@ -39,10 +39,10 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
       onPointerOut={() => setHover(false)}
     >
       <boxGeometry args={[size, size, size]} />
-      <meshStandardMaterial
-        color={KAMI_THEME.colors.parchment}
-        roughness={0.8}
-        metalness={0.1}
+      <meshBasicMaterial 
+        color={KAMI_THEME.colors.parchment} 
+        transparent={true}
+        opacity={1}
       />
       <Edges
         threshold={15}

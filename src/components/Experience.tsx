@@ -22,7 +22,11 @@ export function Experience({ isFreeCamera, setGridMargin, gridGroupRef }: Experi
       dpr={[1, 2]}
       eventSource={window as any}
       eventPrefix="client"
-      gl={{ antialias: true, logarithmicDepthBuffer: true }}
+      gl={{ 
+        antialias: true, 
+        logarithmicDepthBuffer: true,
+        toneMapping: THREE.NoToneMapping // 禁用色调映射，确保色彩与 CSS 一致
+      }}
       className="bg-[var(--kami-parchment)]"
     >
       <Suspense fallback={null}>
