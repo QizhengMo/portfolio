@@ -1,4 +1,4 @@
-import React, { useMemo, useState, Suspense, useRef } from 'react'
+import React, { useMemo, useState, Suspense, useRef, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Edges, PerspectiveCamera, Text } from "@react-three/drei"
@@ -66,7 +66,7 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   )
 })
 
-function BoxGrid({ showDebug }: { showDebug: boolean }) {
+function BoxGrid({ showDebug, groupRef }: { showDebug: boolean, groupRef: React.RefObject<THREE.Group> }) {
   const { size } = useThree()
   const { step, size: boxSize, zoomReference, excluded } = GRID_CONFIG
 
@@ -94,7 +94,7 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
   }, [columns, rows, step, excluded])
 
   return (
-    <group>
+    <group ref={groupRef}>
       {boxes.map((box) => (
         <GridBox
           key={box.id}
@@ -133,10 +133,38 @@ function CameraRig({ isFreeCamera }: { isFreeCamera: boolean }) {
   return null
 }
 
+// 核心组件：利用 Vector3.project 实时同步 3D 边缘到 2D 像素
+function MarginSync({ setMargin, targetRef }: { setMargin: (m: number) => void, targetRef: React.RefObject<THREE.Group> }) {
+  const { camera, size } = useThree()
+  const box = useMemo(() => new THREE.Box3(), [])
+
+  useFrame(() => {
+    if (!targetRef.current) return
+
+    // 1. 获取物体的真实包围盒
+    box.setFromObject(targetRef.current)
+    const leftEdgeWorldX = box.min.x
+
+    // 2. 将世界坐标投影到屏幕空间 (NDC)
+    const vec = new THREE.Vector3(leftEdgeWorldX, 0, 0)
+    vec.project(camera)
+
+    // 3. 将 NDC 转换为像素坐标
+    const pixelX = (vec.x + 1) * (size.width / 2)
+
+    if (pixelX >= 0) {
+      setMargin(pixelX)
+    }
+  })
+  return null
+}
+
 // --- 主应用 ---
 
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
+  const [gridMargin, setGridMargin] = useState(48)
+
   const sectionList = [
     { name: 'About', Component: About },
     { name: 'Work', Component: Work },
@@ -153,12 +181,23 @@ export default function App() {
     }
   }
 
-  // 只有在最后一页 (Contact) 时开启 Perspective
   const isFreeCamera = activeSection === 2
+  const gridGroupRef = useRef<THREE.Group>(null)
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* 3D 背景 */}
+      {/* 1. Logo - 左上角 (通过 MarginSync 实时同步) */}
+      <div
+        className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
+        style={{ left: `${gridMargin}px` }}
+      >
+        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
+          Nathan Mo
+        </div>
+        <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
+      </div>
+
+      {/* 2. 3D 背景 */}
       <div className="absolute inset-0 z-0">
         <Canvas
           dpr={[1, 2]}
@@ -170,12 +209,14 @@ export default function App() {
             <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
             <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
             <CameraRig isFreeCamera={isFreeCamera} />
-            <BoxGrid showDebug={SHOW_DEBUG} />
+            <BoxGrid showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
+            {/* 注入边距同步器，监听真实的网格组 */}
+            <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
           </Suspense>
         </Canvas>
       </div>
 
-      {/* 内容层 */}
+      {/* 3. 内容层 */}
       <div
         className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
         onScroll={handleScroll}
@@ -187,8 +228,11 @@ export default function App() {
         ))}
       </div>
 
-      {/* 导航菜单 */}
-      <div className="absolute bottom-12 right-12 z-[1000] flex flex-col items-end gap-8 text-right">
+      {/* 4. 导航菜单 (动态对齐) */}
+      <div
+        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
+        style={{ right: `${gridMargin}px` }}
+      >
         <nav className="flex flex-col items-end gap-4">
           {sectionList.map((section, i) => (
             <button
