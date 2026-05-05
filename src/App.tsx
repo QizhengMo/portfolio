@@ -1,4 +1,4 @@
-import React, { useMemo, useState, Suspense } from 'react'
+import React, { useMemo, useState, Suspense, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 import { Edges, PerspectiveCamera, Text } from "@react-three/drei"
@@ -15,31 +15,53 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
   gridX: number,
   gridY: number,
   showDebug: boolean
-}) => (
-  <mesh position={position}>
-    <boxGeometry args={[size, size, size]} />
-    <meshStandardMaterial color={KAMI_THEME.colors.ivory} />
-    <Edges
-      threshold={15}
-      color={KAMI_THEME.colors.brand}
-      renderOrder={100}
-      scale={1.002}
+}) => {
+  const [hovered, setHover] = useState(false)
+  const meshRef = useRef<THREE.Mesh>(null)
+
+  // 使用 useFrame 实现平滑的 Z 轴位移（浮雕效果）
+  useFrame(() => {
+    if (!meshRef.current) return
+    const targetZ = hovered ? 0.8 : 0
+    meshRef.current.position.z = THREE.MathUtils.lerp(meshRef.current.position.z, targetZ, 0.1)
+  })
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      onPointerOver={(e) => { e.stopPropagation(); setHover(true) }}
+      onPointerOut={() => setHover(false)}
     >
-      <lineBasicMaterial polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-4} depthTest={true} />
-    </Edges>
-    {showDebug && (
-      <Text
-        position={[0, 0, size / 2 + 0.05]}
-        fontSize={size * 0.2}
-        color={KAMI_THEME.colors.brand}
-        anchorX="center"
-        anchorY="middle"
+      <boxGeometry args={[size, size, size]} />
+      {/* 表面颜色与背景一致，模拟纸张浮雕感 */}
+      <meshStandardMaterial
+        color={KAMI_THEME.colors.parchment}
+        roughness={0.8}
+        metalness={0.1}
+      />
+      <Edges
+        threshold={15}
+        color={hovered ? KAMI_THEME.colors.brand : KAMI_THEME.colors.olive}
+        renderOrder={100}
+        scale={1.002}
       >
-        {`${gridX},${gridY}`}
-      </Text>
-    )}
-  </mesh>
-))
+        <lineBasicMaterial polygonOffset polygonOffsetFactor={-1} polygonOffsetUnits={-4} depthTest={true} />
+      </Edges>
+      {showDebug && (
+        <Text
+          position={[0, 0, size / 2 + 0.05]}
+          fontSize={size * 0.2}
+          color={KAMI_THEME.colors.olive}
+          anchorX="center"
+          anchorY="middle"
+        >
+          {`${gridX},${gridY}`}
+        </Text>
+      )}
+    </mesh>
+  )
+})
 
 function BoxGrid({ showDebug }: { showDebug: boolean }) {
   const { size } = useThree()
@@ -151,7 +173,7 @@ export default function App() {
             fov={ortho.fov}
           />
 
-          <ambientLight intensity={1.5} color={KAMI_THEME.colors.warmLight} />
+          <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
           <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
 
           <CameraRig isFreeCamera={isFreeCamera} />
