@@ -14,33 +14,33 @@ const GridBox = React.memo(({ position, size, gridX, gridY, showDebug }: {
 }) => {
   const [hovered, setHover] = useState(false)
   const meshRef = useRef<THREE.Mesh>(null)
-  
+
   useFrame(() => {
     if (!meshRef.current) return
-    
+
     // 1. 显著增加升起高度
     const targetZ = hovered ? 2.0 : 0
-    
+
     // 2. 实现非对称插值：升起快，下沉慢
     const lerpSpeed = hovered ? 0.15 : 0.04
-    
+
     meshRef.current.position.z = THREE.MathUtils.lerp(
-      meshRef.current.position.z, 
-      targetZ, 
+      meshRef.current.position.z,
+      targetZ,
       lerpSpeed
     )
   })
 
   return (
-    <mesh 
+    <mesh
       ref={meshRef}
       position={position}
       onPointerOver={(e) => { e.stopPropagation(); setHover(true) }}
       onPointerOut={() => setHover(false)}
     >
       <boxGeometry args={[size, size, size]} />
-      <meshStandardMaterial 
-        color={KAMI_THEME.colors.parchment} 
+      <meshStandardMaterial
+        color={KAMI_THEME.colors.parchment}
         roughness={0.8}
         metalness={0.1}
       />

@@ -21,6 +21,7 @@ import { CameraRig, MarginSync } from './components/SceneLogic'
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
   const [gridMargin, setGridMargin] = useState(48)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const sectionList = [
     { name: 'About', Component: About },
@@ -29,7 +30,6 @@ export default function App() {
   ]
   const { ortho } = CAMERA_CONFIG
 
-  // 监听滚动位置来决定导航状态
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const scrollTop = e.currentTarget.scrollTop
     const height = e.currentTarget.clientHeight
@@ -39,60 +39,63 @@ export default function App() {
     }
   }
 
-  // 只有在最后一页 (Contact) 时开启 Perspective
   const isFreeCamera = activeSection === 2
   const gridGroupRef = useRef<THREE.Group>(null)
 
   return (
-    <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* 1. Logo - 左上角 (通过 MarginSync 实时同步) */}
+    <div
+      ref={containerRef}
+      className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden"
+    >
+      {/* 1. Logo - 左上角 */}
       <div
-        className="absolute top-20 z-[1000] flex flex-col items-start gap-2 pointer-events-none"
+        className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
         style={{ left: `${gridMargin}px` }}
       >
-        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase pointer-events-auto">
+        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
           Nathan Mo
         </div>
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
       </div>
 
-      {/* 2. 3D 背景层 */}
+      {/* 2. 3D 背景层 - 监听全局 window 事件以实现完全穿透 */}
       <div className="absolute inset-0 z-0">
         <Canvas
           dpr={[1, 2]}
+          eventSource={window as any}
+          eventPrefix="client"
           gl={{ antialias: true, logarithmicDepthBuffer: true }}
           className="bg-[var(--kami-parchment)]"
         >
           <Suspense fallback={null}>
             <PerspectiveCamera makeDefault position={ortho.pos} fov={ortho.fov} />
-            <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
-            <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
+            <ambientLight intensity={10} color={KAMI_THEME.colors.parchment} />
+            <pointLight position={[20, 20, 20]} intensity={10} color={KAMI_THEME.colors.parchment} />
             <CameraRig isFreeCamera={isFreeCamera} />
             <BoxGrid showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
-            {/* 注入边距同步器 */}
             <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
           </Suspense>
         </Canvas>
       </div>
 
-      {/* 3. 内容层 (文字) - 开启事件穿透 */}
+      {/* 3. 内容层 (文字) - 恢复正常交互，不再需要 pointer-events-none */}
       <div
-        className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory pointer-events-none"
+        className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
         onScroll={handleScroll}
       >
         {sectionList.map(({ name, Component }, i) => (
-          <div key={name} id={`section-${i}`} className="pointer-events-none">
+          <div key={name} id={`section-${i}`}>
             <Component />
           </div>
         ))}
       </div>
 
-      {/* 4. 导航菜单 (动态对齐) */}
+      {/* 4. 导航菜单 */}
       <div
-        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right pointer-events-none"
+        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
         style={{ right: `${gridMargin}px` }}
       >
-        <nav className="flex flex-col items-end gap-4 pointer-events-auto">
+        <nav className="flex flex-col items-end gap-4">
           {sectionList.map((section, i) => (
             <button
               key={section.name}
