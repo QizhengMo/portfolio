@@ -1,7 +1,7 @@
 import React, { useMemo, useState, Suspense } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { OrthographicCamera, Edges, PerspectiveCamera, Text } from "@react-three/drei"
+import { Edges, PerspectiveCamera, Text } from "@react-three/drei"
 
 // 引入主题和配置
 import { KAMI_THEME } from './theme'
@@ -84,29 +84,33 @@ function BoxGrid({ showDebug }: { showDebug: boolean }) {
   )
 }
 
-function CameraRig({ active }: { active: boolean }) {
-  const { persp, transitionStep } = CAMERA_CONFIG
+function CameraRig({ isFreeCamera }: { isFreeCamera: boolean }) {
+  const { ortho, persp, transitionStep } = CAMERA_CONFIG
 
   useFrame((state) => {
-    if (!active) return
+    // 决定当前的目标
+    const target = isFreeCamera ? persp.target : ortho
 
+    // 计算鼠标偏移 (模拟正交模式下禁用鼠标跟随)
+    const mouseIntensity = isFreeCamera ? 1 : 0
     const targetPos = new THREE.Vector3(
-      persp.target.pos.x + state.mouse.x * 2,
-      persp.target.pos.y + state.mouse.y * 2,
-      persp.target.pos.z
+      target.pos.x + state.mouse.x * 2 * mouseIntensity,
+      target.pos.y + state.mouse.y * 2 * mouseIntensity,
+      target.pos.z
     )
 
+    // 平滑插值位置
     state.camera.position.lerp(targetPos, transitionStep)
 
-    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, persp.target.rot.x - state.mouse.y * 0.05, transitionStep)
-    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, persp.target.rot.y + state.mouse.x * 0.05, transitionStep)
-    state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, persp.target.rot.z, transitionStep)
+    // 平滑插值旋转
+    state.camera.rotation.x = THREE.MathUtils.lerp(state.camera.rotation.x, target.rot.x - state.mouse.y * 0.05 * mouseIntensity, transitionStep)
+    state.camera.rotation.y = THREE.MathUtils.lerp(state.camera.rotation.y, target.rot.y + state.mouse.x * 0.05 * mouseIntensity, transitionStep)
+    state.camera.rotation.z = THREE.MathUtils.lerp(state.camera.rotation.z, target.rot.z, transitionStep)
 
-    if ((state.camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
-      const cam = state.camera as THREE.PerspectiveCamera
-      cam.fov = THREE.MathUtils.lerp(cam.fov, persp.target.fov, transitionStep)
-      cam.updateProjectionMatrix()
-    }
+    // 平滑插值 FOV
+    const cam = state.camera as THREE.PerspectiveCamera
+    cam.fov = THREE.MathUtils.lerp(cam.fov, target.fov, transitionStep)
+    cam.updateProjectionMatrix()
   })
   return null
 }
@@ -115,7 +119,7 @@ function CameraRig({ active }: { active: boolean }) {
 
 export default function App() {
   const [isFreeCamera, setIsFreeCamera] = useState(false)
-  const { ortho, persp } = CAMERA_CONFIG
+  const { ortho } = CAMERA_CONFIG
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
@@ -125,7 +129,7 @@ export default function App() {
           <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[var(--kami-brand)] opacity-50">View Mode</span>
           <button
             onClick={() => setIsFreeCamera(!isFreeCamera)}
-            className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-[8px] cursor-pointer text-[13px] font-medium transition-all duration-300 shadow-[var(--kami-whisper)] hover:translate-y-[-1px] hover:shadow-md serif tracking-wider"
+            className="px-6 py-2 bg-[var(--kami-brand)] text-[var(--kami-ivory)] border border-[var(--kami-brand)] rounded-[8px] cursor-pointer text-[13px] font-medium transition-all duration-500 shadow-[var(--kami-whisper)] hover:translate-y-[-1px] hover:shadow-md serif tracking-wider"
             style={{ borderRadius: KAMI_THEME.shape.radius.button }}
           >
             {isFreeCamera ? 'PERSPECTIVE' : 'ORTHOGRAPHIC'}
@@ -134,23 +138,23 @@ export default function App() {
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-20" />
       </div>
 
-      <Canvas dpr={[1, 2]} gl={{ antialias: true }} className="bg-[var(--kami-parchment)]">
+      <Canvas
+        dpr={[1, 2]}
+        gl={{ antialias: true, logarithmicDepthBuffer: true }}
+        className="bg-[var(--kami-parchment)]"
+      >
         <Suspense fallback={null}>
-          {isFreeCamera ? (
-            <PerspectiveCamera
-              makeDefault
-              position={persp.initial.pos}
-              rotation={[0, 0, 0]}
-              fov={persp.initial.fov}
-            />
-          ) : (
-            <OrthographicCamera makeDefault position={ortho.pos} zoom={ortho.zoom} />
-          )}
+          {/* 全局仅使用一个透视相机 */}
+          <PerspectiveCamera
+            makeDefault
+            position={ortho.pos}
+            fov={ortho.fov}
+          />
 
           <ambientLight intensity={1.5} color={KAMI_THEME.colors.warmLight} />
           <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
 
-          <CameraRig active={isFreeCamera} />
+          <CameraRig isFreeCamera={isFreeCamera} />
           <BoxGrid showDebug={SHOW_DEBUG} />
         </Suspense>
       </Canvas>

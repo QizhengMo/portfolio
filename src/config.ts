@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 // 3D 场景业务逻辑配置
 export const GRID_CONFIG = {
-  size: 5,
+  size: 4.98, // 稍微缩小一点，防止边缘重叠导致抖动
   step: 5,
   zoomReference: 30,
   excluded: (x: number, y: number, cols: number, rows: number) => {
@@ -13,19 +13,18 @@ export const GRID_CONFIG = {
 }
 
 export const CAMERA_CONFIG = {
-  ortho: { 
-    pos: [0, 0, 10] as [number, number, number], 
-    zoom: 30 
+  // 模拟正交模式的目标 (增加距离以覆盖全景)
+  ortho: {
+    pos: new THREE.Vector3(0, 0, 70),
+    rot: new THREE.Euler(0, 0, 0),
+    fov: 25
   },
-  persp: { 
-    initial: { 
-      pos: [0, 0, 30] as [number, number, number], 
-      fov: 15 
-    },
-    target: { 
-      pos: new THREE.Vector3(0.25, -45, 30), 
-      rot: new THREE.Euler(1, 0, 0), 
-      fov: 40 
+  // 透视模式的目标
+  persp: {
+    target: {
+      pos: new THREE.Vector3(0.25, -45, 30),
+      rot: new THREE.Euler(1, 0, 0),
+      fov: 40
     }
   },
   transitionStep: 0.05
