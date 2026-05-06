@@ -9,32 +9,10 @@ export const PROJECTS = [
     link: "https://github.com/arextest"
   },
   {
-    title: "Chronos",
-    description: "High-performance booking engine optimized for global scale and low-latency travel transactions.",
-    tags: ["Node.js", "Redis", "Next.js"],
-    year: "2023",
-    link: "#"
-  },
-  {
-    title: "Lumina",
-    description: "AI-driven design system auditor that identifies visual inconsistencies across large-scale web apps.",
-    tags: ["Python", "PyTorch", "React"],
-    year: "2023",
-    link: "#"
-  },
-  {
-    title: "Vertex",
-    description: "Collaborative 3D scene editor allowing teams to build immersive web environments in real-time.",
-    tags: ["R3F", "WebGL", "Firebase"],
-    year: "2022",
-    link: "#"
-  },
-  {
-    title: "Nexus",
-    description: "Enterprise-scale micro-frontend orchestrator designed for modular architecture and rapid deployment.",
-    tags: ["TypeScript", "Go", "Webpack"],
-    year: "2021",
-    link: "#"
+    title: "Trip.com Engineering Assistant",
+    description: "A full-stack Chrome extension for Trip.com engineers that enables real-time context-aware navigation and in-place data decoding. It integrates fragmented internal systems using high-performance content sniffing and WebAssembly-powered utilities.",
+    tags: ["Chrome Extension", "WebAssembly", "TypeScript", "Content Sniffing"],
+    year: "2023"
   }
 ]
 
@@ -53,7 +31,7 @@ export function ProjectItem({ project }: { project: typeof PROJECTS[0] }) {
 
           <div className="flex gap-3 mt-4">
             {project.tags.map(tag => (
-              <span 
+              <span
                 key={tag}
                 className="text-[10px] tracking-[0.2em] uppercase px-3 py-1.5 border border-[var(--kami-brand)] border-opacity-20 rounded-sm opacity-40 group-hover:opacity-80 transition-all"
               >
@@ -65,19 +43,21 @@ export function ProjectItem({ project }: { project: typeof PROJECTS[0] }) {
 
         <div className="flex flex-col items-end justify-between self-stretch py-2 min-w-[100px]">
           <span className="serif text-lg opacity-30 italic">{project.year}</span>
-          
-          {/* 仅在此小箭头区域触发跳转 */}
-          <a 
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-700 text-[var(--kami-brand)] hover:scale-125 transition-transform"
-            title="View Project"
-          >
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </a>
+
+          {/* 仅在 link 存在时显示并触发跳转 */}
+          {project.link && (
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-700 text-[var(--kami-brand)] hover:scale-125 transition-transform"
+              title="View Project"
+            >
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+          )}
         </div>
       </div>
     </div>
