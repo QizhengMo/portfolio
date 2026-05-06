@@ -13,21 +13,21 @@ export const GRID_CONFIG = {
 
 export const SCENE_STATES = [
   {
-    // 0: About - 经典的平面正交感
+    // 0: About
     pos: new THREE.Vector3(0, 0, 70),
     rot: new THREE.Euler(0, 0, 0),
     fov: 25,
     mouseIntensity: 0
   },
-  {
-    // 1: Work - 稍微带一点倾角，体现空间感
+  // 1-5: Work (复用同一个状态)
+  ...Array(5).fill({
     pos: new THREE.Vector3(10, 5, 65),
     rot: new THREE.Euler(-0.1, 0.2, 0.05),
     fov: 28,
     mouseIntensity: 0.3
-  },
+  }),
   {
-    // 2: Contact - 俯视透视，强烈的 3D 冲击力
+    // 6: Contact
     pos: new THREE.Vector3(0.25, -45, 30),
     rot: new THREE.Euler(1, 0, 0),
     fov: 40,

@@ -4,10 +4,9 @@ import { PerspectiveCamera } from "@react-three/drei"
 import * as THREE from 'three'
 
 import { KAMI_THEME } from '../theme'
-import { CAMERA_CONFIG, SHOW_DEBUG } from '../config'
+import { SHOW_DEBUG } from '../config'
 import { GridBackground } from './GridBackground'
 import { CameraRig } from './SceneLogic'
-import { FallingCubes } from './FallingCubes'
 
 interface ExperienceProps {
   activeSection: number
@@ -20,20 +19,20 @@ export function Experience({ activeSection, gridGroupRef }: ExperienceProps) {
       dpr={[1, 2]}
       eventSource={window as any}
       eventPrefix="client"
-      gl={{ 
-        antialias: true, 
+      gl={{
+        antialias: true,
         logarithmicDepthBuffer: true,
-        toneMapping: THREE.NoToneMapping 
+        toneMapping: THREE.NoToneMapping
       }}
       className="bg-[var(--kami-parchment)]"
     >
       <Suspense fallback={null}>
         <PerspectiveCamera makeDefault position={[0, 0, 70]} fov={25} />
-        <ambientLight intensity={3} color={KAMI_THEME.colors.parchment} />
+        <ambientLight intensity={2} color={KAMI_THEME.colors.parchment} />
         <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
+
         <CameraRig activeSection={activeSection} />
         <GridBackground activeSection={activeSection} showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
-        <FallingCubes activeSection={activeSection} />
       </Suspense>
     </Canvas>
   )
