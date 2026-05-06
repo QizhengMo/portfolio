@@ -24,11 +24,10 @@ export default function App() {
   const gridGroupRef = useRef<THREE.Group>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  // 使用 IntersectionObserver 精准追踪当前活跃章节
   useEffect(() => {
     const observerOptions = {
       root: scrollContainerRef.current,
-      threshold: 0.4, // 当章节有 40% 出现在视野中时触发
+      threshold: 0.4,
     }
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
@@ -41,8 +40,6 @@ export default function App() {
     }
 
     const observer = new IntersectionObserver(observerCallback, observerOptions)
-
-    // 观察所有章节
     const sections = scrollContainerRef.current?.querySelectorAll('.section-wrapper')
     sections?.forEach((section) => observer.observe(section))
 
@@ -51,9 +48,11 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* 1. Logo */}
+      {/* 1. 顶层 Logo - 仅在首屏显示 */}
       <div 
-        className="absolute top-20 z-[1000] flex flex-col items-start gap-2 pointer-events-none"
+        className={`absolute top-20 z-[1000] flex flex-col items-start gap-2 transition-all duration-700 ease-in-out pointer-events-none ${
+          activeSection === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'
+        }`}
         style={{ left: `${FIXED_MARGIN}px` }}
       >
         <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase pointer-events-auto">
@@ -87,11 +86,21 @@ export default function App() {
         ))}
       </div>
 
-      {/* 4. 导航菜单 */}
+      {/* 4. 底部导航 + 动态 Logo */}
       <div 
         className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right pointer-events-none"
         style={{ right: `${FIXED_MARGIN}px` }}
       >
+        {/* 动态 Logo - 滚动后在此处显示 */}
+        <div className={`transition-all duration-700 ease-in-out ${
+          activeSection > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+        }`}>
+          <div className="serif text-sm font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
+            Nathan Mo
+          </div>
+          <div className="h-[1px] w-8 bg-[var(--kami-brand)] opacity-40 ml-auto mt-2" />
+        </div>
+
         <nav className="flex flex-col items-end gap-4 pointer-events-auto">
           {sectionList.map((section, i) => (
             <button
@@ -110,6 +119,7 @@ export default function App() {
             </button>
           ))}
         </nav>
+
         <div className="serif text-3xl text-[var(--kami-brand)] opacity-20 italic">
           0{activeSection + 1}
         </div>
