@@ -36,9 +36,9 @@ export default function Contact() {
 
           {/* 社交链接 - 水平一排 */}
           <div className="flex gap-10 items-baseline">
-            <a 
-              href="https://github.com/QizhengMo" 
-              target="_blank" 
+            <a
+              href="https://github.com/QizhengMo"
+              target="_blank"
               rel="noreferrer"
               className="text-lg serif text-[var(--kami-brand)] opacity-50 hover:opacity-100 transition-all flex items-center gap-2 group"
             >
@@ -47,9 +47,6 @@ export default function Contact() {
                 <path d="M7 17L17 7M17 7H7M17 7V17" />
               </svg>
             </a>
-            <div className="text-sm serif text-[var(--kami-brand)] opacity-10 italic cursor-default">
-              LinkedIn
-            </div>
           </div>
         </div>
       </div>
