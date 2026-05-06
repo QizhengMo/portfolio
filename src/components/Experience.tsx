@@ -6,16 +6,15 @@ import * as THREE from 'three'
 import { KAMI_THEME } from '../theme'
 import { CAMERA_CONFIG, SHOW_DEBUG } from '../config'
 import { GridBackground } from './GridBackground'
-import { CameraRig, MarginSync } from './SceneLogic'
+import { CameraRig } from './SceneLogic'
 import { FallingCubes } from './FallingCubes'
 
 interface ExperienceProps {
   activeSection: number
-  setGridMargin: (m: number) => void
   gridGroupRef: React.RefObject<THREE.Group>
 }
 
-export function Experience({ activeSection, setGridMargin, gridGroupRef }: ExperienceProps) {
+export function Experience({ activeSection, gridGroupRef }: ExperienceProps) {
   return (
     <Canvas
       dpr={[1, 2]}
@@ -35,7 +34,6 @@ export function Experience({ activeSection, setGridMargin, gridGroupRef }: Exper
         <CameraRig activeSection={activeSection} />
         <GridBackground activeSection={activeSection} showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
         <FallingCubes activeSection={activeSection} />
-        <MarginSync setMargin={setGridMargin} targetRef={gridGroupRef} />
       </Suspense>
     </Canvas>
   )

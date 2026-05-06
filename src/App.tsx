@@ -13,8 +13,10 @@ import { Experience } from './components/Experience'
 
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
-  const [gridMargin, setGridMargin] = useState(48)
   
+  // 使用固定边距，不再随 3D 网格动态变化
+  const FIXED_MARGIN = 64 
+
   const sectionList = [
     { name: 'About', Component: About },
     { name: 'Work', Component: Work },
@@ -34,10 +36,10 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* 1. Logo - 左上角 */}
+      {/* 1. Logo - 左上角 (使用固定边距) */}
       <div 
         className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
-        style={{ left: `${gridMargin}px` }}
+        style={{ left: `${FIXED_MARGIN}px` }}
       >
         <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
           Nathan Mo
@@ -45,11 +47,10 @@ export default function App() {
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
       </div>
 
-      {/* 2. 3D 背景层 - 已提取至 Experience 组件 */}
+      {/* 2. 3D 背景层 */}
       <div className="absolute inset-0 z-0">
         <Experience 
           activeSection={activeSection}
-          setGridMargin={setGridMargin}
           gridGroupRef={gridGroupRef}
         />
       </div>
@@ -66,10 +67,10 @@ export default function App() {
         ))}
       </div>
 
-      {/* 4. 导航菜单 (动态对齐) */}
+      {/* 4. 导航菜单 (使用固定边距) */}
       <div 
         className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
-        style={{ right: `${gridMargin}px` }}
+        style={{ right: `${FIXED_MARGIN}px` }}
       >
         <nav className="flex flex-col items-end gap-4">
           {sectionList.map((section, i) => (
