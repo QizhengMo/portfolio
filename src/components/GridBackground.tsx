@@ -82,7 +82,7 @@ export function GridBackground({
 }: {
   activeSection: number,
   showDebug: boolean,
-  groupRef: React.RefObject<THREE.Group>
+  groupRef: React.RefObject<THREE.Group | null>
 }) {
   const { size } = useThree()
   const { step, size: boxSize, zoomReference, excluded } = GRID_CONFIG

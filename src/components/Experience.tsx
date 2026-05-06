@@ -10,7 +10,7 @@ import { CameraRig } from './SceneLogic'
 
 interface ExperienceProps {
   activeSection: number
-  gridGroupRef: React.RefObject<THREE.Group>
+  gridGroupRef: React.RefObject<THREE.Group | null>
 }
 
 export function Experience({ activeSection, gridGroupRef }: ExperienceProps) {
