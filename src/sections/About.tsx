@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function About() {
   return (
-    <section className="h-screen w-full flex items-center justify-center snap-start px-10">
+    <section className="h-screen w-full flex flex-col justify-center snap-start pl-[64px] pr-24">
       <div className="max-w-4xl w-full">
         <h1 className="text-7xl serif text-[var(--kami-brand)] opacity-90 lowercase tracking-tighter mb-8">
           About

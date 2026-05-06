@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import * as THREE from 'three'
 
 // 引入章节组件
@@ -13,8 +13,6 @@ import { Experience } from './components/Experience'
 
 export default function App() {
   const [activeSection, setActiveSection] = useState(0)
-  
-  // 使用固定边距，不再随 3D 网格动态变化
   const FIXED_MARGIN = 64 
 
   const sectionList = [
@@ -23,25 +21,42 @@ export default function App() {
     { name: 'Contact', Component: Contact }
   ]
 
-  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop
-    const height = e.currentTarget.clientHeight
-    const index = Math.round(scrollTop / height)
-    if (index !== activeSection) {
-      setActiveSection(index)
-    }
-  }
-
   const gridGroupRef = useRef<THREE.Group>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // 使用 IntersectionObserver 精准追踪当前活跃章节
+  useEffect(() => {
+    const observerOptions = {
+      root: scrollContainerRef.current,
+      threshold: 0.4, // 当章节有 40% 出现在视野中时触发
+    }
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const index = parseInt(entry.target.getAttribute('data-index') || '0')
+          setActiveSection(index)
+        }
+      })
+    }
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions)
+
+    // 观察所有章节
+    const sections = scrollContainerRef.current?.querySelectorAll('.section-wrapper')
+    sections?.forEach((section) => observer.observe(section))
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
-      {/* 1. Logo - 左上角 (使用固定边距) */}
+      {/* 1. Logo */}
       <div 
-        className="absolute top-20 z-[1000] flex flex-col items-start gap-2"
+        className="absolute top-20 z-[1000] flex flex-col items-start gap-2 pointer-events-none"
         style={{ left: `${FIXED_MARGIN}px` }}
       >
-        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase">
+        <div className="serif text-xl font-medium tracking-[0.3em] text-[var(--kami-brand)] uppercase pointer-events-auto">
           Nathan Mo
         </div>
         <div className="h-[1px] w-12 bg-[var(--kami-brand)] opacity-40" />
@@ -57,22 +72,27 @@ export default function App() {
 
       {/* 3. 内容层 (文字) */}
       <div 
+        ref={scrollContainerRef}
         className="absolute inset-0 z-10 overflow-y-auto scroll-smooth snap-y snap-mandatory"
-        onScroll={handleScroll}
       >
         {sectionList.map(({ name, Component }, i) => (
-          <div key={name} id={`section-${i}`}>
+          <div 
+            key={name} 
+            id={`section-${i}`} 
+            data-index={i}
+            className="section-wrapper snap-start"
+          >
             <Component />
           </div>
         ))}
       </div>
 
-      {/* 4. 导航菜单 (使用固定边距) */}
+      {/* 4. 导航菜单 */}
       <div 
-        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right"
+        className="absolute bottom-12 z-[1000] flex flex-col items-end gap-8 text-right pointer-events-none"
         style={{ right: `${FIXED_MARGIN}px` }}
       >
-        <nav className="flex flex-col items-end gap-4">
+        <nav className="flex flex-col items-end gap-4 pointer-events-auto">
           {sectionList.map((section, i) => (
             <button
               key={section.name}
