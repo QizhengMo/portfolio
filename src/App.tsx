@@ -55,6 +55,9 @@ export default function App() {
   // 确定当前显示的 Work 索引，并进行边界钳制，防止在动画过渡时出现 0 或 6
   const displayWorkIdx = Math.max(0, Math.min(PROJECTS.length - 1, activeSection - 1))
 
+  // 获取当前页面的语义类型 (about | work | contact)
+  const currentType = flatSections[activeSection]?.type as any
+
   return (
     <div className="fixed inset-0 w-full h-full bg-[var(--kami-parchment)] overflow-hidden">
       
@@ -90,6 +93,7 @@ export default function App() {
       <div className="absolute inset-0 z-0">
         <Experience 
           activeSection={activeSection}
+          sectionType={currentType}
           gridGroupRef={gridGroupRef}
         />
       </div>

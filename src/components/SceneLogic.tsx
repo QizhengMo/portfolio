@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react'
 import { useThree, useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
-import { SCENE_STATES, CAMERA_CONFIG } from '../config'
+import { SCENE_STATES, CAMERA_CONFIG, type SceneStateKey } from '../config'
 
-export function CameraRig({ activeSection }: { activeSection: number }) {
+export function CameraRig({ activeSection, sectionType }: { activeSection: number, sectionType: SceneStateKey }) {
   const { transitionStep } = CAMERA_CONFIG
   
   useFrame((state) => {
-    // 根据当前索引获取目标配置，兜底使用第一个状态
-    const target = SCENE_STATES[activeSection] || SCENE_STATES[0]
+    // 语义化驱动：根据页面类型获取目标配置，不再依赖索引
+    const target = SCENE_STATES[sectionType] || SCENE_STATES.about
     const { mouseIntensity } = target
 
     // 计算带鼠标偏移的目标位置
