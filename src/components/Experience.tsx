@@ -7,6 +7,7 @@ import { KAMI_THEME } from '../theme'
 import { SHOW_DEBUG, type SceneStateKey } from '../config'
 import { GridBackground } from './GridBackground'
 import { CameraRig } from './SceneLogic'
+import { RubiksCube } from './RubiksCube'
 
 interface ExperienceProps {
   activeSection: number
@@ -33,6 +34,7 @@ export function Experience({ activeSection, sectionType, gridGroupRef }: Experie
         <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
 
         <CameraRig activeSection={activeSection} sectionType={sectionType} />
+        <RubiksCube active={sectionType === 'work'} activeSection={activeSection} />
         <GridBackground activeSection={activeSection} showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
       </Suspense>
     </Canvas>

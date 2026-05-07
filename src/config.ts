@@ -19,10 +19,10 @@ export const SCENE_STATES = {
     mouseIntensity: 0
   },
   work: {
-    pos: new THREE.Vector3(10, 5, 65),
-    rot: new THREE.Euler(-0.1, 0.2, 0.05),
-    fov: 28,
-    mouseIntensity: 0.3
+    pos: new THREE.Vector3(15, 5, 65), // 向右偏移更多
+    rot: new THREE.Euler(-0.1, 0.45, 0.05), // 剧烈的左侧纵深
+    fov: 30, // 略微放大透视
+    mouseIntensity: 0.4 // 增加一点随动的灵敏度
   },
   contact: {
     pos: new THREE.Vector3(0.25, -45, 30),
