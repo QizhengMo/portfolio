@@ -21,8 +21,8 @@ export default function Contact() {
         {/* 极简联系区域 */}
         <div className="flex flex-col gap-8">
           {/* 邮箱项目 */}
-          <div className="flex flex-col items-start gap-1 group cursor-pointer" onClick={handleCopyEmail}>
-            <div className="relative">
+          <div className="flex flex-col items-start gap-1 group">
+            <div className="relative cursor-pointer w-fit" onClick={handleCopyEmail}>
               <span className="text-2xl serif text-[var(--kami-brand)] opacity-60 group-hover:opacity-100 transition-all">
                 {email}
               </span>
@@ -53,7 +53,7 @@ export default function Contact() {
 
       {/* 底部版权信息 */}
       <div className="absolute bottom-12 left-[64px] flex gap-6 items-center opacity-10 text-[9px] uppercase tracking-[0.3em] text-[var(--kami-brand)]">
-        <span>© 2024 Nathan Mo</span>
+        <span>© 2026 Nathan Mo</span>
       </div>
     </section>
   )
