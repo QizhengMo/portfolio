@@ -30,7 +30,7 @@ export function RubiksCube({ active, activeSection }: { active: boolean, activeS
   const groupRef = useRef<THREE.Group>(null)
   const pieceRefs = useRef<THREE.Group[]>([])
 
-  const pieceSize = GRID_CONFIG.size * (2 / 3)
+  const pieceSize = GRID_CONFIG.size * (1.5 / 3)
   const gap = 0.1
   const step = pieceSize + gap
 

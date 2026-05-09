@@ -34,7 +34,7 @@ export function Experience({ activeSection, sectionType, gridGroupRef }: Experie
         <pointLight position={[20, 20, 20]} intensity={1} color="#fff" />
 
         <CameraRig activeSection={activeSection} sectionType={sectionType} />
-        <RubiksCube active={sectionType === 'work'} activeSection={activeSection} />
+        {/* <RubiksCube active={sectionType === 'work'} activeSection={activeSection} /> */}
         <GridBackground activeSection={activeSection} showDebug={SHOW_DEBUG} groupRef={gridGroupRef} />
       </Suspense>
     </Canvas>
